@@ -90,7 +90,7 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
 
 ## Addendum 
 
-Otherwise for the others, there is one ready-made file '*socat-1.8.1.3.rar*'. You can download it by going to : **socat-1.8.1.3.rar** and proceeding by keyboard shortcut (Ctrl + Shift + s).
+Otherwise for the others, there is one ready-made file '*socat-1.8.1.3.7z*'. You can download it by going to : **socat-1.8.1.3.7z** and proceeding by keyboard shortcut (Ctrl + Shift + s).
 
 ## Conclusion
 
