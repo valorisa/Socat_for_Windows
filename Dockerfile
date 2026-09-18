@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y \
     bash \
  && rm -rf /var/lib/apt/lists/*
 
-# Build and install socat 1.8.1.1 from official source
-ARG SOCAT_VERSION=1.8.1.1
+# Build and install socat 1.8.1.3 from official source
+ARG SOCAT_VERSION=1.8.1.3
 RUN wget http://www.dest-unreach.org/socat/download/socat-${SOCAT_VERSION}.tar.gz \
  && tar -xzf socat-${SOCAT_VERSION}.tar.gz \
  && cd socat-${SOCAT_VERSION} \
