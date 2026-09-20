@@ -66,6 +66,36 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
 3. Verify the compilation:
    - Once the compilation is complete, you should have an executable `socat.exe` in the current directory (`your_current_directory`).
 
+4. (Optional) Install socat within the Cygwin environment:
+
+   ```bash
+   make install
+   ```
+
+   This installs `socat.exe` (and its man page) into the standard Cygwin
+   prefix, typically `/usr/local/bin` (i.e. `C:\cygwin64\usr\local\bin`),
+   making `socat` immediately available from any Cygwin terminal without
+   manually copying the binary around. Two things worth knowing before
+   relying on it:
+
+   - **It only covers the Cygwin side.** `/usr/local/bin` is added to the
+     `PATH` *inside* Cygwin, not to the native Windows `PATH`. Running
+     `socat` from `cmd.exe` or PowerShell still requires Step 4 (copy the
+     binary to a Windows-accessible folder and add it to the system
+     `PATH`) — or, alternatively, adding `C:\cygwin64\usr\local\bin`
+     itself to the Windows `PATH`.
+   - **`cygwin1.dll` is required either way.** This build is linked
+     against Cygwin's POSIX layer, so `socat.exe` needs `cygwin1.dll`
+     (found in `C:\cygwin64\bin`) reachable — either next to `socat.exe`
+     or on the `PATH` — to run outside a Cygwin terminal. `make install`
+     does not copy this DLL for you.
+   - You can also target a Windows-visible path directly, e.g.
+     `make install prefix=/cygdrive/c/socat`, to skip the manual copy in
+     Step 4 altogether.
+
+   If `/usr/local` isn't writable by your user, run this from an elevated
+   Cygwin terminal, or install to a custom prefix as shown above.
+
 ## Step 4: Use socat.exe
 
 1. Copy `socat.exe` to an accessible directory from your Windows command line:
@@ -97,4 +127,3 @@ Otherwise for the others, there is one ready-made file '*socat-1.8.1.3.7z*'. You
 You now have compiled `socat` version 1.8.1.3 under Windows 11 using Cygwin and obtained an executable `socat.exe`. You can use it directly from the Windows command line after adding its location to the PATH. This method provides maximum flexibility to adapt `socat` to your specific needs.
 
 This will help other users understand and follow the process clearly.
-
