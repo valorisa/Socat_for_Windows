@@ -1,10 +1,10 @@
-# socat 1.8.1.0 Cygport for Windows
+# socat 1.8.1.3 Cygport for Windows
 
-This section provides a Cygport package for building and installing Socat 1.8.1.0 on Windows using Cygwin.
+This section provides a Cygport package for building and installing Socat 1.8.1.3 on Windows using Cygwin.
 
 ## Description
 
-Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer between two independent data channels. This project aims to simplify the process of building and installing Socat 1.8.1.0 on Windows systems using Cygwin and Cygport.
+Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer between two independent data channels. This project aims to simplify the process of building and installing Socat 1.8.1.3 on Windows systems using Cygwin and Cygport.
 
 ## Prerequisites
 
