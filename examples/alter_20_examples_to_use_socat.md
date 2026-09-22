@@ -11,9 +11,11 @@
 - **Linux (Fedora/RHEL)** : `sudo dnf install socat`
 - **macOS (Homebrew)** : `brew install socat`
 - **Windows 11 (WSL2 Ubuntu)** :
+
   ```bash
   sudo apt-get update && sudo apt-get install socat
   ```
+
   Accès fichiers Windows depuis WSL : `C:\` → `/mnt/c/`
 
 ---
@@ -29,6 +31,7 @@ socat -d -d -lf ./relay_acl.log \
 ```
 
 **Points clés :**
+
 - `range=...` : filtre les clients autorisés (très utile en réseau interne).
 - `fork` : une connexion = un processus (évite de bloquer tout le monde).
 - Complétez avec un firewall : défense en profondeur.
@@ -45,6 +48,7 @@ socat -T 5 TCP-LISTEN:2323,reuseaddr,fork \
 ```
 
 **Points clés :**
+
 - `-T 5` coupe si le client ne lit/écrit rien (évite les clients “accrochés”).
 - **Bon réflexe sécurité :** si vous faites du `SYSTEM:`/`EXEC:`, gardez `bind=127.0.0.1` si ce n’est pas strictement nécessaire d’exposer sur le LAN.
 
@@ -55,17 +59,20 @@ socat -T 5 TCP-LISTEN:2323,reuseaddr,fork \
 **Objectif :** envoyer un gros fichier texte/log en compressant côté émetteur, décompresser côté récepteur.
 
 ### Récepteur
+
 ```bash
 socat -d -d TCP-LISTEN:7777,reuseaddr,fork \
   SYSTEM:'gzip -dc > received.log'
 ```
 
 ### Émetteur
+
 ```bash
 gzip -c ./big.log | socat -d -d - TCP:IP_RECEVEUR:7777,connect-timeout=5
 ```
 
 **Points clés :**
+
 - Rapide, simple, et souvent plus efficace qu’un transfert brut.
 - Pour de la vérification, ajoutez un `sha256sum` avant/après.
 
@@ -81,6 +88,7 @@ socat TCP-LISTEN:15432,bind=127.0.0.1,reuseaddr,fork \
 ```
 
 **Points clés :**
+
 - Nécessite `socat` côté serveur distant aussi.
 - `bind=127.0.0.1` : exposition locale uniquement (recommandé).
 
@@ -96,6 +104,7 @@ socat -u UDP-RECVFROM:5514,reuseaddr,fork \
 ```
 
 **Points clés :**
+
 - `UDP-RECVFROM:...,fork` : gère plusieurs sources UDP.
 - Limite : la **source IP/port** n’est pas “préservée” dans le flux TCP (si vous en avez besoin, logguez côté passerelle).
 
@@ -110,6 +119,7 @@ socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'printf "HTTP/1.1 503 Service Unavai
 ```
 
 **Points clés :**
+
 - Très utile pour couper proprement un port en prod tout en gardant une réponse lisible.
 - Ajoutez `bind=127.0.0.1` si c’est juste pour du local.
 
@@ -125,6 +135,7 @@ socat TCP-LISTEN:6000,reuseaddr,fork,crlf \
 ```
 
 **Points clés :**
+
 - `crlf` aide quand des clients Windows envoient `\r\n`.
 - `append` évite d’écraser le fichier.
 
@@ -141,6 +152,7 @@ socat -d -d -lf ./limits.log \
 ```
 
 **Points clés :**
+
 - `max-children=30` met un plafond simple et efficace.
 - Combinez avec un reverse proxy/ratelimit si vous avez besoin de finesse.
 
@@ -156,6 +168,7 @@ socat TCP-LISTEN:8443,bind=127.0.0.1,reuseaddr,fork \
 ```
 
 **Points clés :**
+
 - Vous ouvrez `127.0.0.1:8443` en local, et ça sort via SOCKS5 vers `target:443`.
 - Parfait pour tester un client “qui ne sait pas SOCKS”.
 
@@ -171,6 +184,7 @@ socat TCP6-LISTEN:8080,reuseaddr,fork \
 ```
 
 **Points clés :**
+
 - Utile quand le frontend est IPv6-ready mais que le backend ne l’est pas encore.
 
 ---
@@ -188,6 +202,7 @@ socat -d -d -lf ./socat_relay_8080.log \
 ```
 
 **Explication :**
+
 - `-d -d` : logs de diagnostic.
 - `-lf ...` : fichier de log.
 - `reuseaddr,fork` : redémarrage rapide + multi-clients.
@@ -204,6 +219,7 @@ socat -T 15 TCP-LISTEN:9001,reuseaddr,fork \
 ```
 
 **Explication :**
+
 - `-T 15` : coupe sur inactivité.
 - `SYSTEM:` : compose une réponse lisible, utile pour supervision ad hoc.
 
@@ -212,6 +228,7 @@ socat -T 15 TCP-LISTEN:9001,reuseaddr,fork \
 ## 13) Transfert de répertoire propre (préserve droits) via `tar` + contrôle d’intégrité (SHA-256)
 
 ### Côté réception (serveur)
+
 ```bash
 mkdir -p ./restore
 socat -d -d TCP-LISTEN:8888,reuseaddr,fork \
@@ -219,6 +236,7 @@ socat -d -d TCP-LISTEN:8888,reuseaddr,fork \
 ```
 
 ### Côté envoi (client)
+
 ```bash
 cd ./data_to_send
 tar -cpf - . | socat -d -d - TCP:IP_RECEVEUR:8888,connect-timeout=5
@@ -266,18 +284,21 @@ socat TCP-LISTEN:7000,bind=127.0.0.1,reuseaddr,fork \
 ## 18) Ajouter du TLS devant un service legacy en clair (TLS termination)
 
 ### Préparer un certificat (test)
+
 ```bash
 openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
   -keyout server.key -out server.crt -subj "/CN=localhost"
 ```
 
 ### Serveur (terminaison TLS)
+
 ```bash
 socat OPENSSL-LISTEN:8443,reuseaddr,fork,cert=server.crt,key=server.key,verify=0 \
   TCP:127.0.0.1:8080
 ```
 
 ### Client (test)
+
 ```bash
 socat - OPENSSL:127.0.0.1:8443,verify=0
 ```
@@ -298,11 +319,13 @@ socat TCP-LISTEN:2001,reuseaddr,fork \
 ## 20) Test “sérieux” de débit : sink serveur + émission contrôlée
 
 ### Serveur (réception / “trou noir”)
+
 ```bash
 socat -d -d TCP-LISTEN:9000,reuseaddr,fork OPEN:/dev/null
 ```
 
 ### Client (envoi 512 MiB) + mesure de temps
+
 ```bash
 time dd if=/dev/zero bs=1m count=512 2>/dev/null | socat - TCP:IP_SERVEUR:9000,connect-timeout=5
 ```
@@ -314,4 +337,3 @@ time dd if=/dev/zero bs=1m count=512 2>/dev/null | socat - TCP:IP_SERVEUR:9000,c
 - **Sécurité** : évitez d’exposer `SYSTEM:`/`EXEC:` sur une interface publique. Préférez `bind=127.0.0.1` + SSH/VPN, et un firewall.
 - **Résilience** : ajoutez `connect-timeout=...`, `-T ...`, `keepalive`, `max-children=...`, et des logs (`-lf`, `-d -d`) pour diagnostiquer vite.
 - **Debug** : `-v -x` est excellent pour comprendre un protocole ou une panne côté applicatif.
-

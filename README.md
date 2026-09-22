@@ -23,7 +23,6 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
      - **autoconf**: To configure sources.
      - **libtool**: For shared library management.
      - **openssl-devel**: For SSL/TLS support.
-
    You can use the search bar to find these packages more easily.
 
 4. **Complete the Installation**:
@@ -79,17 +78,22 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
    relying on it:
 
    - **It only covers the Cygwin side.** `/usr/local/bin` is added to the
+
      `PATH` *inside* Cygwin, not to the native Windows `PATH`. Running
      `socat` from `cmd.exe` or PowerShell still requires Step 4 (copy the
      binary to a Windows-accessible folder and add it to the system
      `PATH`) — or, alternatively, adding `C:\cygwin64\usr\local\bin`
      itself to the Windows `PATH`.
+
    - **`cygwin1.dll` is required either way.** This build is linked
+
      against Cygwin's POSIX layer, so `socat.exe` needs `cygwin1.dll`
      (found in `C:\cygwin64\bin`) reachable — either next to `socat.exe`
      or on the `PATH` — to run outside a Cygwin terminal. `make install`
      does not copy this DLL for you.
+
    - You can also target a Windows-visible path directly, e.g.
+
      `make install prefix=/cygdrive/c/socat`, to skip the manual copy in
      Step 4 altogether.
 
@@ -118,7 +122,7 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
    - Click "New" and add the path to the folder containing `socat.exe` (e.g., `C:\Program Files\socat`).
    - Click "OK" to close all windows.
 
-## Addendum 
+## Addendum
 
 Otherwise for the others, there is one ready-made file '*socat-1.8.1.3.7z*'. You can download it by going to : **socat-1.8.1.3.7z** and proceeding by keyboard shortcut (Ctrl + Shift + s).
 

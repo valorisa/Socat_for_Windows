@@ -1,4 +1,5 @@
 # 🧭 Guide opérationnel : 20 scénarios réseau avec `socat`
+>
 > **Compatibilité OS :** Linux, macOS et Windows 11 (WSL2).  
 > **Public visé :** administrateurs, DevOps, ingénieurs réseau, ou pentesters légitimes.  
 > **Version socat recommandée :** `>=1.7.4`
@@ -8,10 +9,10 @@
 ## ⚙️ Installation rapide
 
 | OS | Commande |
-|----|-----------|
+| ---- | ----------- |
 | Debian/Ubuntu | `sudo apt install socat` |
-| Fedora/RHEL  | `sudo dnf install socat` |
-| macOS        | `brew install socat` |
+| Fedora/RHEL | `sudo dnf install socat` |
+| macOS | `brew install socat` |
 | Windows 11 (WSL2) | `sudo apt install socat` |
 
 ---
@@ -19,14 +20,17 @@
 ## 🧩 Exemple 1 — Relais TCP “production” (ACL + logs)
 
 ### 🎯 Objectif  
+
 Écouter sur un port local, relayer vers un service distant avec filtres IP et logs persistants.
 
 ### 🔁 Schéma de flux
+
 ```
 [Client local] → TCP:8080 → [socat] → TCP:example.com:80
 ```
 
 ### 💻 Commande
+
 ```bash
 socat -d -d -lf ./socat_relay_8080.log \
   TCP4-LISTEN:8080,bind=127.0.0.1,reuseaddr,fork,range=127.0.0.1/32 \
@@ -34,11 +38,13 @@ socat -d -d -lf ./socat_relay_8080.log \
 ```
 
 ### 🧪 Test client
+
 ```bash
 curl -v http://127.0.0.1:8080/
 ```
 
 ### 🩹 Troubleshooting
+
 - Si `curl` renvoie *Connection refused* → port 80 distant fermé.  
 - Si rien ne s’affiche et pas de log → vérifier le pare-feu local.  
 - Fichier de log disponible : `tail -f ./socat_relay_8080.log`.
@@ -48,6 +54,7 @@ curl -v http://127.0.0.1:8080/
 ## 🧩 Exemple 2 — Basculement auto Blue/Green
 
 ### 🎯 Objectif  
+
 Basculer automatiquement vers un backend B si le A ne répond pas.
 
 ```
@@ -64,11 +71,13 @@ socat -d -d -ly -lf socat_failover.log \
 ```
 
 ### 🧪 Test
+
 ```bash
 curl http://127.0.0.1:9000/
 ```
 
 ### 🩹 Troubleshooting
+
 - Vérifier les IP A/B par `ping`.
 - Si les deux échouent → vérifier droits SELinux ou pare-feu.
 
@@ -77,23 +86,27 @@ curl http://127.0.0.1:9000/
 ## 🧩 Exemple 3 — Transfert de répertoire avec contrôle d’intégrité
 
 ### Schéma
+
 ```
 Machine A (tar|socat TCP→) → Machine B (socat|tar, tee, sha256sum)
 ```
 
-### Serveur :
+### Serveur
+
 ```bash
 mkdir -p ./restore
 socat -d -d TCP4-LISTEN:8888,reuseaddr - \
  | tee archive.tgz | sha256sum > archive.tgz.sha256
 ```
 
-### Client :
+### Client
+
 ```bash
 tar -czf - dossier/ | socat - TCP4:IP_SERVEUR:8888
 ```
 
 ### Vérification
+
 ```bash
 sha256sum -c archive.tgz.sha256
 ```
@@ -112,6 +125,7 @@ socat TCP-LISTEN:15432,reuseaddr,fork \
 ```
 
 **Client test :**
+
 ```bash
 psql -h 127.0.0.1 -p 15432 -U dbuser
 ```
@@ -130,6 +144,7 @@ socat -u UDP4-RECV:5514,reuseaddr \
 ```
 
 ### Test
+
 ```bash
 echo "Hello" | socat - UDP4-SENDTO:127.0.0.1:5514
 tail -n1 udp_events.log
@@ -150,6 +165,7 @@ socat -v -x -d -d -lf ./wire.log \
 ```
 
 ### Test
+
 ```bash
 curl http://127.0.0.1:5000/
 tail -f wire.log
@@ -169,6 +185,7 @@ socat TCP-LISTEN:7000,bind=127.0.0.1,reuseaddr,fork \
 ```
 
 ### Test
+
 ```bash
 curl --unix-socket /tmp/service.sock http://localhost
 # devient équivalent à
@@ -191,6 +208,7 @@ socat OPENSSL-LISTEN:8443,reuseaddr,fork,cert=cert.pem,key=key.pem,verify=0 \
 ```
 
 ### Test
+
 ```bash
 curl -vk https://127.0.0.1:8443/
 ```
@@ -230,6 +248,7 @@ socat TCP-LISTEN:9100,bind=127.0.0.1,reuseaddr,fork \
 ```
 
 ### Test
+
 ```bash
 curl -s http://127.0.0.1:9100/
 ```
@@ -267,10 +286,13 @@ dig @127.0.0.1 -p 5353 example.com
 ## 🧩 Exemple 15 — Test de débit réseau
 
 Serveur :
+
 ```bash
 socat -u TCP-LISTEN:9000,reuseaddr /dev/null
 ```
+
 Client :
+
 ```bash
 dd if=/dev/zero bs=1M count=512 | socat -u - TCP:IP:9000
 ```
@@ -333,7 +355,7 @@ socat TCP-LISTEN:8080,reuseaddr,fork \
 # 🧰 Section « Troubleshooting général »
 
 | Symptôme | Diagnostic possible | Solution |
-|-----------|--------------------|-----------|
+| ----------- | -------------------- | ----------- |
 | **“Address already in use”** | socket encore en TIME_WAIT | ajouter `reuseaddr` |
 | **Aucune donnée reçue** | pare-feu ou règle `ufw` | tester avec `nc` sur le même port |
 | **Erreur SSL: certificate verify failed** | CA manquante | utiliser `cafile=` correct ou `verify=0` en lab |
@@ -346,6 +368,7 @@ socat TCP-LISTEN:8080,reuseaddr,fork \
 ## 📘 Annexes
 
 ### Bonnes pratiques
+
 - Toujours spécifier `bind=127.0.0.1` pour éviter une exposition réseau involontaire.  
 - Utiliser `connect-timeout` et `-T` pour éviter les connexions fantômes.  
 - Préférer `-v -x` pour le debug binaire.  

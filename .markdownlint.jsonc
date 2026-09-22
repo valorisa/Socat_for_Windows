@@ -1,0 +1,40 @@
+{
+  "default": true,
+
+  // Lignes longues : désactivé (URLs, commandes, exemples)
+  "MD013": false,
+
+  // HTML inline autorisé
+  "MD033": {
+    "allowed_elements": ["br", "kbd", "details", "summary"]
+  },
+
+  // Pas d’obligation de H1 en première ligne
+  "MD041": false,
+
+  // Autoriser plusieurs titres de même niveau consécutifs
+  "MD025": false,
+
+  // Espaces en fin de ligne : 0 ou 2 (pour les sauts de ligne Markdown)
+  "MD009": {
+    "spaces_per_line": 2
+  },
+
+  // Titres : on ne force pas systématiquement des lignes vides avant/après
+  "MD022": false,
+
+  // Titres dupliqués : fréquent dans des runbooks/scénarios similaires
+  "MD024": false,
+
+  // Lignes vides multiples : on tolère (ex. séparation de sections)
+  "MD012": false,
+
+  // Style des tableaux : on ne veut pas bloquer là-dessus
+  "MD060": false,
+
+  // Langue des blocs de code : on ne bloque pas si absente
+  "MD040": false,
+
+  // Emphase utilisée comme titre : on tolère dans les notes/runbooks
+  "MD036": false
+}

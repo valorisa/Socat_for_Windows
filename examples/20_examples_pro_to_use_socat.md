@@ -11,9 +11,11 @@
 - **Linux (Fedora/RHEL)** : `sudo dnf install socat`
 - **macOS (Homebrew)** : `brew install socat`
 - **Windows 11 (WSL2 Ubuntu)** :
+
   ```bash
   sudo apt-get update && sudo apt-get install socat
   ```
+
   Accès fichiers Windows depuis WSL : `C:\` → `/mnt/c/`
 
 ---
@@ -32,7 +34,7 @@ keepalive,nodelay,range=127.0.0.1/32 \
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `bind=127.0.0.1` | Écoute uniquement en local (pas d'exposition accidentelle) |
 | `range=127.0.0.1/32` | ACL réseau intégrée : seul localhost peut se connecter |
 | `fork` | Un processus fils par connexion entrante |
@@ -57,6 +59,7 @@ socat -d -d -ly -lf socat_failover.log \
 ```
 
 **Explication :**
+
 - `SYSTEM:` exécute un sous-shell pour chaque connexion entrante.
 - Le shell tente d'abord le **backend A** (`10.0.0.11`) ; en cas d'échec (timeout ou refus), il bascule immédiatement sur le **backend B** (`10.0.0.12`).
 - Le basculement est **par connexion**, pas en cours de session.
@@ -96,6 +99,7 @@ cat archive.tgz.sha256
 ```
 
 **Explication :**
+
 - `tar -czf - .` produit un flux `tar.gz` sur stdout, envoyé directement dans `socat`.
 - Côté réception, `tee` écrit le fichier sur disque **et** calcule simultanément le hash SHA-256.
 - Les permissions, sous-répertoires et liens symboliques sont préservés par `tar`.
@@ -114,6 +118,7 @@ socat TCP4-LISTEN:15432,reuseaddr,fork \
 ```
 
 **Explication :**
+
 - `ssh -W host:port` demande à SSH de relayer stdin/stdout vers `host:port` **sur la machine distante**.
 - `socat` transforme une connexion TCP locale en flux stdin/stdout pour SSH.
 - Très pratique quand on veut un pont sans configuration SSH persistante (`~/.ssh/config`).
@@ -137,12 +142,13 @@ socat -u UDP4-RECV:5514,reuseaddr \
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `-u` | Mode unidirectionnel (UDP → fichier), simple et robuste |
 | `UDP4-RECV:5514` | Reçoit les datagrammes UDP sur le port 5514 |
 | `SYSTEM:` | Ajoute un timestamp ISO-8601 et append dans le fichier log |
 
 **Tester en local :**
+
 ```bash
 echo "test event" | socat - UDP4-SENDTO:127.0.0.1:5514
 ```
@@ -162,6 +168,7 @@ socat -v -x -d -d -lf ./wire_5000.log \
 ```
 
 **Lire les logs en temps réel :**
+
 ```bash
 tail -f ./wire_5000.log
 ```
@@ -169,7 +176,7 @@ tail -f ./wire_5000.log
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `-v` | Log les données transférées en texte lisible |
 | `-x` | Dump hexadécimal (indispensable pour les protocoles binaires) |
 | `-lf ./wire_5000.log` | Persiste tous les échanges dans un fichier daté |
@@ -191,6 +198,7 @@ socat TCP4-LISTEN:15432,bind=127.0.0.1,reuseaddr,fork \
 ```
 
 **Explication :**
+
 - `UNIX-CONNECT:` se connecte directement au fichier socket Unix.
 - `bind=127.0.0.1` : exposition **uniquement locale** — bonne pratique systématique.
 - Applicable à tout service utilisant des UDS : PostgreSQL, Docker daemon, Redis, etc.
@@ -231,7 +239,7 @@ curl -vk https://localhost:8443/
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `OPENSSL-LISTEN:8443` | Écoute et négocie TLS sur le port 8443 |
 | `cert/key` | Certificat et clé privée du serveur |
 | `verify=0` | Pas de vérification du certificat client (OK en dev) |
@@ -254,6 +262,7 @@ verify=1,servername=api.exemple-interne.local
 ```
 
 **Explication :**
+
 - Ton application locale parle à `127.0.0.1:9443` en TCP simple.
 - `socat` prend en charge la négociation TLS sortante en présentant `client.crt` et `client.key`.
 - `cafile` + `verify=1` : vérifie rigoureusement le certificat du serveur.
@@ -274,6 +283,7 @@ socat TCP4-LISTEN:2001,reuseaddr,fork \
 ```
 
 **Se connecter depuis une machine distante :**
+
 ```bash
 socat - TCP4:IP_SERVEUR_SERIE:2001
 ```
@@ -281,7 +291,7 @@ socat - TCP4:IP_SERVEUR_SERIE:2001
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `raw` | Désactive les transformations de ligne du TTY |
 | `echo=0` | Supprime l'écho parasite |
 | `b115200` | Vitesse en bauds (adaptez à votre matériel) |
@@ -306,12 +316,14 @@ socat -d -d \
 ```
 
 **Tester l'endpoint :**
+
 ```bash
 curl -s http://127.0.0.1:9100/
 # {"host":"mon-serveur","time":"2026-02-24T10:30:00+01:00"}
 ```
 
 **Explication :**
+
 - `EXEC:` exécute un sous-shell pour chaque connexion et renvoie sa sortie standard au client TCP.
 - Le shell construit une réponse HTTP valide (statut 200 + JSON) à la volée.
 - La réponse est **dynamique** : hostname et timestamp sont recalculés à chaque appel.
@@ -337,6 +349,7 @@ socat -T 15 TCP4-LISTEN:9001,bind=127.0.0.1,reuseaddr,fork \
 ```
 
 **Tester :**
+
 ```bash
 socat - TCP4:127.0.0.1:9001
 # host=mon-serveur
@@ -346,6 +359,7 @@ socat - TCP4:127.0.0.1:9001
 ```
 
 **Explication :**
+
 - `-T 15` : timeout d'inactivité de 15 secondes — évite les connexions zombies.
 - `SYSTEM:` compose la réponse via le shell.
 
@@ -376,7 +390,7 @@ socat -d -d -u \
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `-u` | Mode unidirectionnel (adapté aux flux UDP non bidirectionnels) |
 | `UDP4-RECVFROM` | Reçoit les datagrammes UDP entrants |
 | `TCP4:IP_DU_SITE_B:7000` | Encapsule le flux dans un tunnel TCP vers le site B |
@@ -397,11 +411,13 @@ socat -d -d -ly -lf socat_dns.log \
 ```
 
 **Tester :**
+
 ```bash
 dig @127.0.0.1 -p 5353 example.com
 ```
 
 **Explication :**
+
 - `UDP4-LISTEN:5353` : écoute localement sur le port 5353 (non privilégié, contrairement au 53).
 - `UDP4:9.9.9.9:53` : relaie vers Quad9 sur le port DNS standard.
 - Utile pour tester un résolveur DNS sans toucher à la configuration système ou pour logguer les requêtes DNS d'une application.
@@ -426,6 +442,7 @@ time dd if=/dev/zero bs=1M count=512 2>/dev/null \
 ```
 
 **Explication :**
+
 - Serveur : tout ce qui arrive est redirigé vers `/dev/null` — pas d'I/O disque, mesure réseau pure.
 - Client : `dd` génère un flux constant de zéros ; `time` mesure la durée totale.
 - `-u` : unidirectionnel, pas de retour de données — test de débit upload pur.
@@ -446,6 +463,7 @@ socat -d -d -T 2 TCP4:serveur.exemple.local:443 -
 ```
 
 **Combiner avec une boucle de surveillance :**
+
 ```bash
 while true; do
   echo "--- $(date -Is) ---"
@@ -455,6 +473,7 @@ done
 ```
 
 **Explication :**
+
 - `-T 2` : timeout d'inactivité I/O de 2 secondes.
 - Les logs `-d -d` indiquent précisément si la connexion TCP s'est établie et à quelle étape elle échoue.
 - La boucle permet une **supervision continue** sans outil dédié.
@@ -478,11 +497,13 @@ socat -d -d TCP4-LISTEN:8000,reuseaddr \
 ```
 
 **Télécharger depuis une autre machine :**
+
 ```bash
 curl -O http://IP_SERVEUR:8000/
 ```
 
 **Explication :**
+
 - Pas de `fork` : le serveur accepte **une seule connexion** puis s'arrête automatiquement.
 - `Content-Length` et `Content-Disposition` garantissent un téléchargement propre avec `curl` ou un navigateur.
 - `stat -c%s` (Linux) / `stat -f%z` (macOS) assure la compatibilité cross-platform.
@@ -502,6 +523,7 @@ mon_application | \
 ```
 
 **Variante avec `socat` seul (fichier + réseau) :**
+
 ```bash
 socat -u - \
   SYSTEM:'tee /dev/stderr | socat -u - TCP4:logserver.exemple.local:5000' \
@@ -509,6 +531,7 @@ socat -u - \
 ```
 
 **Explication :**
+
 - `tee` duplique le flux : une copie va dans `local.log`, l'autre continue vers le `socat` interne.
 - Le `socat` interne envoie le flux vers un serveur de logs distant en TCP.
 - `-u` : mode unidirectionnel pour chaque étape.
@@ -536,6 +559,7 @@ ssh -R 9090:127.0.0.1:3000 user@machine_relais_publique \
 ```
 
 **Variante autonome (sans SSH, si les deux machines se voient) :**
+
 ```bash
 # Sur la machine locale
 socat TCP4-LISTEN:9090,reuseaddr,fork TCP4:127.0.0.1:3000
@@ -545,6 +569,7 @@ socat TCP4-LISTEN:8080,reuseaddr,fork TCP4:IP_MACHINE_LOCALE:9090
 ```
 
 **Explication :**
+
 - Le service local tourne sur `:3000` (ex : serveur de développement).
 - La machine relais expose `:8080` publiquement et relaie vers `:9090`.
 - Le tunnel SSH `-R` fait le lien entre les deux.
@@ -567,7 +592,7 @@ socat -d -d -ly -lf socat_socks5.log \
 **Explication :**
 
 | Option | Rôle |
-|---|---|
+| --- | --- |
 | `SOCKS4A:` | Utilise le protocole SOCKS4A (résolution DNS côté proxy) |
 | `proxy.exemple.local` | Adresse du proxy SOCKS |
 | `target.exemple.local:80` | Destination finale (résolue par le proxy) |
@@ -583,7 +608,7 @@ Une application qui ne supporte pas nativement les proxies peut être redirigée
 ## Mémo des options clés
 
 | Option | Effet |
-|---|---|
+| --- | --- |
 | `bind=127.0.0.1` | Limite l'écoute à localhost |
 | `range=x.x.x.x/mask` | ACL réseau intégrée (filtre les IP autorisées) |
 | `reuseaddr` | Évite "Address already in use" au redémarrage |

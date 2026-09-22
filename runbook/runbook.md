@@ -50,6 +50,7 @@ C = destination finale
 ```
 
 **Légende des schémas :**
+
 - `───▶` : flux TCP/UDP
 - `═══▶` : flux chiffré (TLS)
 - `┄┄┄▶` : flux série ou fichier
@@ -63,6 +64,7 @@ C = destination finale
 **Objectif :** N'autoriser que certaines plages IP à se connecter.
 
 **Schéma :**
+
 ```
 ┌────────────────┐        ┌─────────────────────────┐        ┌────────────┐
 │ Client autorisé│──TCP──▶│ socat :8080             │──TCP──▶│ backend:80 │
@@ -76,6 +78,7 @@ C = destination finale
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -d -d -lf ./relay_acl.log \
   TCP-LISTEN:8080,reuseaddr,fork,range=192.168.1.0/24 \
@@ -83,11 +86,13 @@ socat -d -d -lf ./relay_acl.log \
 ```
 
 **Test client (autorisé) :**
+
 ```bash
 curl -v http://IP_SOCAT:8080/
 ```
 
 **Test client (refusé) :**
+
 ```bash
 # Depuis une IP hors plage : connexion refusée
 curl -v http://IP_SOCAT:8080/
@@ -95,6 +100,7 @@ curl -v http://IP_SOCAT:8080/
 ```
 
 **Vérification :**
+
 ```bash
 tail -f ./relay_acl.log
 # Les connexions refusées apparaissent avec "range" mismatch
@@ -109,6 +115,7 @@ tail -f ./relay_acl.log
 **Objectif :** Répondre avec une bannière puis fermer proprement.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌──────────────────┐
 │  Client  │──TCP──▶│ socat :2323      │
@@ -119,12 +126,14 @@ tail -f ./relay_acl.log
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -T 5 TCP-LISTEN:2323,reuseaddr,fork \
   SYSTEM:'printf "Service=demo\nDate=%s\nBye.\n" "$(date -Is)"'
 ```
 
 **Test client :**
+
 ```bash
 nc localhost 2323
 # ou
@@ -132,6 +141,7 @@ socat - TCP:localhost:2323
 ```
 
 **Sortie attendue :**
+
 ```
 Service=demo
 Date=2025-02-24T14:32:01+0100
@@ -147,6 +157,7 @@ Bye.
 **Objectif :** Économiser la bande passante lors d'un transfert.
 
 **Schéma :**
+
 ```
 ┌──────────────┐        ┌────────────────┐        ┌──────────────┐
 │   Émetteur   │        │    Réseau      │        │  Récepteur   │
@@ -160,17 +171,20 @@ Bye.
 ```
 
 **Commande récepteur :**
+
 ```bash
 socat -d -d TCP-LISTEN:7777,reuseaddr \
   SYSTEM:'gzip -dc > received.log && echo "OK: $(wc -c < received.log) octets"'
 ```
 
 **Commande émetteur :**
+
 ```bash
 gzip -c ./big.log | socat -d -d - TCP:IP_RECEVEUR:7777,connect-timeout=5
 ```
 
 **Vérification :**
+
 ```bash
 # Côté récepteur
 sha256sum received.log
@@ -188,6 +202,7 @@ sha256sum big.log
 **Objectif :** Accéder à un service distant écoutant sur socket Unix.
 
 **Schéma :**
+
 ```
 ┌──────────┐       ┌──────────────────┐       ┌──────────────────┐       ┌─────────────┐
 │  Client  │──TCP─▶│ socat :15432     │──SSH─▶│ serveur distant  │──UDS─▶│ PostgreSQL  │
@@ -196,12 +211,14 @@ sha256sum big.log
 ```
 
 **Commande (machine locale) :**
+
 ```bash
 socat TCP-LISTEN:15432,bind=127.0.0.1,reuseaddr,fork \
   EXEC:'ssh user@serveur_distant socat - UNIX-CONNECT:/var/run/postgresql/.s.PGSQL.5432'
 ```
 
 **Test client :**
+
 ```bash
 psql -h 127.0.0.1 -p 15432 -U postgres
 # ou
@@ -209,6 +226,7 @@ nc -v 127.0.0.1 15432
 ```
 
 **Prérequis :**
+
 - `socat` installé sur le serveur distant
 - Accès SSH configuré (clé recommandée)
 
@@ -221,6 +239,7 @@ nc -v 127.0.0.1 15432
 **Objectif :** Centraliser des événements UDP vers un collecteur TCP.
 
 **Schéma :**
+
 ```
 ┌───────────┐       ┌────────────────┐       ┌────────────────┐
 │ Source 1  │──UDP─▶│                │       │                │
@@ -234,12 +253,14 @@ nc -v 127.0.0.1 15432
 ```
 
 **Commande passerelle :**
+
 ```bash
 socat -d -d UDP-RECVFROM:5514,reuseaddr,fork \
   TCP:collector.local:5515,connect-timeout=3
 ```
 
 **Test client (simuler un envoi UDP) :**
+
 ```bash
 echo "test event $(date)" | socat - UDP-SENDTO:IP_PASSERELLE:5514
 ```
@@ -253,6 +274,7 @@ echo "test event $(date)" | socat - UDP-SENDTO:IP_PASSERELLE:5514
 **Objectif :** Afficher une page maintenance sans serveur web.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌──────────────────────┐
 │ Browser  │──HTTP─▶│ socat :8080          │
@@ -262,17 +284,20 @@ echo "test event $(date)" | socat - UDP-SENDTO:IP_PASSERELLE:5514
 ```
 
 **Commande serveur :**
+
 ```bash
 socat TCP-LISTEN:8080,reuseaddr,fork \
   SYSTEM:'printf "HTTP/1.1 503 Service Unavailable\r\nContent-Type: text/plain\r\nConnection: close\r\nContent-Length: 32\r\n\r\nMaintenance. Reessayez plus tard"'
 ```
 
 **Test client :**
+
 ```bash
 curl -i http://localhost:8080/
 ```
 
 **Sortie attendue :**
+
 ```
 HTTP/1.1 503 Service Unavailable
 Content-Type: text/plain
@@ -291,6 +316,7 @@ Maintenance. Reessayez plus tard
 **Objectif :** Collecter des logs TCP multi-OS en append.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌──────────────────┐        ┌─────────────┐
 │ Client 1 │──TCP──▶│                  │        │             │
@@ -303,17 +329,20 @@ Maintenance. Reessayez plus tard
 ```
 
 **Commande serveur :**
+
 ```bash
 socat TCP-LISTEN:6000,reuseaddr,fork,crlf \
   OPEN:events.txt,creat,append
 ```
 
 **Test client :**
+
 ```bash
 echo "Event from $(hostname) at $(date)" | socat - TCP:localhost:6000
 ```
 
 **Vérification :**
+
 ```bash
 tail -f events.txt
 ```
@@ -327,6 +356,7 @@ tail -f events.txt
 **Objectif :** Limiter le nombre de connexions simultanées.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌────────────────────────┐        ┌──────────┐
 │ Client 1 │──TCP──▶│                        │──TCP──▶│          │
@@ -340,6 +370,7 @@ tail -f events.txt
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -d -d -lf ./limits.log \
   TCP-LISTEN:9090,reuseaddr,fork,max-children=30 \
@@ -347,6 +378,7 @@ socat -d -d -lf ./limits.log \
 ```
 
 **Test de charge :**
+
 ```bash
 # Ouvrir 35 connexions simultanées
 for i in $(seq 1 35); do
@@ -356,6 +388,7 @@ wait
 ```
 
 **Vérification :**
+
 ```bash
 # Compter les processus socat
 pgrep -c socat
@@ -371,6 +404,7 @@ pgrep -c socat
 **Objectif :** Atteindre une cible via SOCKS5 depuis un client non-SOCKS.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌──────────────────┐        ┌─────────────┐        ┌──────────┐
 │  Client  │──TCP──▶│ socat :8443      │──SOCKS5▶│ proxy.corp  │──TCP──▶│ target   │
@@ -379,12 +413,14 @@ pgrep -c socat
 ```
 
 **Commande serveur :**
+
 ```bash
 socat TCP-LISTEN:8443,bind=127.0.0.1,reuseaddr,fork \
   SOCKS5:proxy.corp.local:target.example.com:443,socksport=1080
 ```
 
 **Test client :**
+
 ```bash
 curl -v https://127.0.0.1:8443/ --resolve target.example.com:8443:127.0.0.1
 ```
@@ -398,6 +434,7 @@ curl -v https://127.0.0.1:8443/ --resolve target.example.com:8443:127.0.0.1
 **Objectif :** Exposer un backend IPv4 sur une interface IPv6.
 
 **Schéma :**
+
 ```
 ┌──────────────┐        ┌──────────────────┐        ┌──────────────┐
 │ Client IPv6  │──TCP6─▶│ socat            │──TCP4─▶│ Backend IPv4 │
@@ -408,12 +445,14 @@ curl -v https://127.0.0.1:8443/ --resolve target.example.com:8443:127.0.0.1
 ```
 
 **Commande serveur :**
+
 ```bash
 socat TCP6-LISTEN:8080,reuseaddr,fork \
   TCP4:127.0.0.1:8081,connect-timeout=5
 ```
 
 **Test client :**
+
 ```bash
 curl -v -6 http://[::1]:8080/
 ```
@@ -427,6 +466,7 @@ curl -v -6 http://[::1]:8080/
 **Objectif :** Relay robuste avec diagnostics.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌─────────────────────────────┐        ┌──────────────┐
 │  Client  │──TCP──▶│ socat :8080                 │──TCP──▶│ example.com  │
@@ -443,6 +483,7 @@ curl -v -6 http://[::1]:8080/
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -d -d -lf ./socat_relay_8080.log \
   TCP-LISTEN:8080,reuseaddr,fork,keepalive,nodelay \
@@ -450,11 +491,13 @@ socat -d -d -lf ./socat_relay_8080.log \
 ```
 
 **Test client :**
+
 ```bash
 curl -v http://localhost:8080/
 ```
 
 **Vérification :**
+
 ```bash
 tail -f ./socat_relay_8080.log
 ```
@@ -468,6 +511,7 @@ tail -f ./socat_relay_8080.log
 **Objectif :** Fournir un endpoint de supervision simple.
 
 **Schéma :**
+
 ```
 ┌────────────┐        ┌──────────────────────────┐
 │ Monitoring │──TCP──▶│ socat :9001              │
@@ -477,6 +521,7 @@ tail -f ./socat_relay_8080.log
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -T 15 TCP-LISTEN:9001,reuseaddr,fork \
   SYSTEM:'printf "host=%s\ndate=%s\nuptime=%s\nload=%s\n" \
@@ -485,11 +530,13 @@ socat -T 15 TCP-LISTEN:9001,reuseaddr,fork \
 ```
 
 **Test client :**
+
 ```bash
 nc localhost 9001
 ```
 
 **Sortie attendue :**
+
 ```
 host=myserver
 date=2025-02-24T14:45:00+0100
@@ -506,6 +553,7 @@ load=0.15 0.10 0.05 1/234 5678
 **Objectif :** Transférer un dossier complet avec vérification d'intégrité.
 
 **Schéma :**
+
 ```
 ┌──────────────────┐        ┌────────────────┐        ┌──────────────────┐
 │    ÉMETTEUR      │        │    Réseau      │        │    RÉCEPTEUR     │
@@ -525,6 +573,7 @@ load=0.15 0.10 0.05 1/234 5678
 ```
 
 **Commande récepteur :**
+
 ```bash
 mkdir -p ./restore
 socat -d -d TCP-LISTEN:8888,reuseaddr \
@@ -534,12 +583,14 @@ socat -d -d TCP-LISTEN:8888,reuseaddr \
 ```
 
 **Commande émetteur :**
+
 ```bash
 cd ./data_to_send
 tar -cpf - . | socat -d -d - TCP:IP_RECEVEUR:8888,connect-timeout=10
 ```
 
 **Vérification :**
+
 ```bash
 cat restore.sha256
 ```
@@ -553,6 +604,7 @@ cat restore.sha256
 **Objectif :** Exposer localement un service distant qui n'écoute que sur 127.0.0.1.
 
 **Schéma :**
+
 ```
 ┌──────────┐       ┌────────────────────┐       ┌────────────────────┐
 │  Client  │──TCP─▶│ socat :15432       │══SSH═▶│ serveur_distant    │
@@ -561,12 +613,14 @@ cat restore.sha256
 ```
 
 **Commande :**
+
 ```bash
 socat TCP-LISTEN:15432,reuseaddr,fork \
   EXEC:'ssh -o ExitOnForwardFailure=yes user@serveur_distant -W 127.0.0.1:5432'
 ```
 
 **Test client :**
+
 ```bash
 psql -h 127.0.0.1 -p 15432 -U myuser -d mydb
 ```
@@ -580,6 +634,7 @@ psql -h 127.0.0.1 -p 15432 -U myuser -d mydb
 **Objectif :** Archiver des événements UDP avec timestamp.
 
 **Schéma :**
+
 ```
 ┌───────────┐        ┌─────────────────────────┐        ┌────────────────┐
 │ App/Syslog│──UDP──▶│ socat UDP-RECV:5514     │───────▶│ udp_events.log │
@@ -588,22 +643,26 @@ psql -h 127.0.0.1 -p 15432 -U myuser -d mydb
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -u UDP-RECV:5514,reuseaddr \
   SYSTEM:'while IFS= read -r line; do printf "%s %s\n" "$(date -Is)" "$line"; done >> ./udp_events.log'
 ```
 
 **Test client :**
+
 ```bash
 echo "<14>Test syslog message" | socat - UDP-SENDTO:localhost:5514
 ```
 
 **Vérification :**
+
 ```bash
 tail -f ./udp_events.log
 ```
 
 **Sortie attendue :**
+
 ```
 2025-02-24T14:50:00+0100 <14>Test syslog message
 ```
@@ -617,6 +676,7 @@ tail -f ./udp_events.log
 **Objectif :** Analyser le trafic entre un client et un serveur.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌─────────────────────────┐        ┌──────────────┐
 │  Client  │──TCP──▶│ socat :5000             │──TCP──▶│ backend:5001 │
@@ -631,6 +691,7 @@ tail -f ./udp_events.log
 ```
 
 **Commande serveur :**
+
 ```bash
 socat -v -x -d -d -lf ./wire_5000.log \
   TCP-LISTEN:5000,reuseaddr,fork \
@@ -638,11 +699,13 @@ socat -v -x -d -d -lf ./wire_5000.log \
 ```
 
 **Test client :**
+
 ```bash
 echo "GET / HTTP/1.0\r\n\r\n" | socat - TCP:localhost:5000
 ```
 
 **Analyse du log :**
+
 ```bash
 cat ./wire_5000.log
 # Affiche le dump hexadécimal des échanges
@@ -657,6 +720,7 @@ cat ./wire_5000.log
 **Objectif :** Rendre un socket Unix accessible via TCP.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌─────────────────────────┐        ┌────────────────────┐
 │  Client  │──TCP──▶│ socat :7000             │──UDS──▶│ /tmp/service.sock  │
@@ -665,12 +729,14 @@ cat ./wire_5000.log
 ```
 
 **Commande :**
+
 ```bash
 socat TCP-LISTEN:7000,bind=127.0.0.1,reuseaddr,fork \
   UNIX-CONNECT:/tmp/mon_service.sock
 ```
 
 **Test client :**
+
 ```bash
 curl http://127.0.0.1:7000/health
 # ou
@@ -686,6 +752,7 @@ echo "STATUS" | nc 127.0.0.1 7000
 **Objectif :** Ajouter TLS devant une application non sécurisée.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌─────────────────────────┐        ┌──────────────┐
 │  Client  │══TLS══▶│ socat OPENSSL-LISTEN    │──TCP──▶│ backend HTTP │
@@ -695,18 +762,21 @@ echo "STATUS" | nc 127.0.0.1 7000
 ```
 
 **Préparer certificat :**
+
 ```bash
 openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
   -keyout server.key -out server.crt -subj "/CN=localhost"
 ```
 
 **Commande serveur :**
+
 ```bash
 socat OPENSSL-LISTEN:8443,reuseaddr,fork,cert=server.crt,key=server.key,verify=0 \
   TCP:127.0.0.1:8080
 ```
 
 **Test client :**
+
 ```bash
 curl -k https://localhost:8443/
 # ou
@@ -722,6 +792,7 @@ socat - OPENSSL:localhost:8443,verify=0
 **Objectif :** Accéder à un périphérique série via réseau.
 
 **Schéma :**
+
 ```
 ┌──────────┐        ┌─────────────────────────┐        ┌────────────────┐
 │  Client  │──TCP──▶│ socat :2001             │┄┄┄┄┄┄▶│ /dev/ttyUSB0   │
@@ -731,12 +802,14 @@ socat - OPENSSL:localhost:8443,verify=0
 ```
 
 **Commande serveur :**
+
 ```bash
 socat TCP-LISTEN:2001,reuseaddr,fork \
   FILE:/dev/ttyUSB0,raw,b115200,cs8,parenb=0,cstopb=0,echo=0
 ```
 
 **Test client :**
+
 ```bash
 # Connexion interactive
 socat -,raw,echo=0 TCP:IP_SERVEUR:2001
@@ -746,6 +819,7 @@ echo "AT" | socat - TCP:IP_SERVEUR:2001
 ```
 
 **Windows 11 (WSL2) :**
+
 ```bash
 # Installer usbipd-win pour partager le port USB avec WSL2
 # Puis dans WSL2, le device apparaît en /dev/ttyUSB0
@@ -760,6 +834,7 @@ echo "AT" | socat - TCP:IP_SERVEUR:2001
 **Objectif :** Mesurer le throughput réseau sans iperf.
 
 **Schéma :**
+
 ```
 ┌──────────────────┐        ┌────────────────┐        ┌──────────────────┐
 │    ÉMETTEUR      │        │    Réseau      │        │    RÉCEPTEUR     │
@@ -773,16 +848,19 @@ echo "AT" | socat - TCP:IP_SERVEUR:2001
 ```
 
 **Commande récepteur (sink) :**
+
 ```bash
 socat -d -d TCP-LISTEN:9000,reuseaddr,fork OPEN:/dev/null
 ```
 
 **Commande émetteur + mesure :**
+
 ```bash
 time sh -c 'dd if=/dev/zero bs=1M count=512 2>/dev/null | socat - TCP:IP_SERVEUR:9000'
 ```
 
 **Calcul du débit :**
+
 ```bash
 # Si le temps réel est de 4.2 secondes :
 # Débit = 512 MiB / 4.2s ≈ 122 MiB/s ≈ 976 Mbit/s
@@ -795,7 +873,7 @@ time sh -c 'dd if=/dev/zero bs=1M count=512 2>/dev/null | socat - TCP:IP_SERVEUR
 ### Problèmes courants et solutions
 
 | Symptôme | Cause probable | Solution |
-|----------|----------------|----------|
+| ---------- | ---------------- | ---------- |
 | `Address already in use` | Port déjà occupé | `reuseaddr` ou vérifier avec `ss -tlnp` |
 | `Connection refused` | Service cible down | Vérifier backend, firewall |
 | `Connection timed out` | Firewall, route | Tester avec `nc -vz host port` |
@@ -849,7 +927,7 @@ socat -d -d -v -x ...
 ### Options globales fréquentes
 
 | Option | Description |
-|--------|-------------|
+| -------- | ------------- |
 | `-d -d` | Mode debug (2 niveaux) |
 | `-lf FILE` | Log dans un fichier |
 | `-v` | Affiche les données transférées |
@@ -860,7 +938,7 @@ socat -d -d -v -x ...
 ### Options d'adresse fréquentes
 
 | Option | Description |
-|--------|-------------|
+| -------- | ------------- |
 | `reuseaddr` | Réutiliser le port immédiatement |
 | `fork` | Un processus par connexion |
 | `bind=IP` | Lier à une interface spécifique |
@@ -873,7 +951,7 @@ socat -d -d -v -x ...
 ### Types d'adresses
 
 | Type | Exemple | Usage |
-|------|---------|-------|
+| ------ | --------- | ------- |
 | `TCP-LISTEN` | `TCP-LISTEN:8080` | Serveur TCP |
 | `TCP` | `TCP:host:port` | Client TCP |
 | `TCP4` / `TCP6` | `TCP6-LISTEN:8080` | Forcer IPv4/IPv6 |

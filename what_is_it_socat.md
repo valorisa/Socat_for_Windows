@@ -19,5 +19,4 @@ Some of the examples of using socat are :
 - Netcat and rinetd replacement
 - Redirecting TCP-oriented programs to a serial line
 - Establishing a relatively secure environment (su and chroot) for running client or server shell scripts inside network connections.
-
  <http://www.dest-unreach.org/socat/doc/socat.html#EXAMPLES>
