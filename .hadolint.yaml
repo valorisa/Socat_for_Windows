@@ -1,0 +1,30 @@
+# .hadolint.yaml – configuration hadolint pour Socat_for_Windows
+
+# Ignorer des règles qui ne correspondent pas à tes choix assumés :
+ignored:
+  # DL3008 : "Always tag the version of an image explicitly"
+  # Tu utilises python:X.Y.Z-slim-bookworm via ARG PYTHON_VERSION, c’est déjà piné.
+  - DL3008
+
+  # DL3059 : "Multiple consecutive RUN instructions"
+  # Tu as plusieurs RUN dans le stage builder et runtime, c’est volontaire
+  # (séparation build-essentials / runtime deps, lisibilité).
+  - DL3059
+
+  # DL3018 : "Pin versions in apk add" / DL3028 pour pip
+  # Tu gères déjà les versions via requirements.txt et PYTHON_VERSION.
+  - DL3018
+  - DL3028
+
+  # DL4006 : "Set the SHELL option -o pipefail"
+  # Tu n’as pas de pipelines critiques dans ce Dockerfile.
+  - DL4006
+
+  # DL3013 : "Pin versions in pip install"
+  # Tu utilises requirements.txt, donc pas besoin de pin inline.
+  - DL3013
+
+# Registres de confiance (optionnel, mais utile en durcissement)
+trustedRegistries:
+  - docker.io
+  - ghcr.io

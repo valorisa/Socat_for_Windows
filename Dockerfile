@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # =============================================================================
-# Stage 1 : builder
+# Stage 1: builder
 # Compile socat depuis les sources. Ce stage est jeté à la fin du build ;
 # seul le binaire compilé est récupéré dans le stage final.
 # =============================================================================
@@ -24,14 +24,16 @@ WORKDIR /build
 RUN wget -q "http://www.dest-unreach.org/socat/download/socat-${SOCAT_VERSION}.tar.gz" \
  && wget -q "http://www.dest-unreach.org/socat/download.sha256sum" \
  && grep "socat-${SOCAT_VERSION}.tar.gz" download.sha256sum | sha256sum -c - \
- && tar -xzf "socat-${SOCAT_VERSION}.tar.gz" \
- && cd "socat-${SOCAT_VERSION}" \
- && ./configure \
+ && tar -xzf "socat-${SOCAT_VERSION}.tar.gz"
+
+WORKDIR /build/socat-${SOCAT_VERSION}
+
+RUN ./configure \
  && make -j"$(nproc)" \
  && make install DESTDIR=/build/out
 
 # =============================================================================
-# Stage 2 : runtime
+# Stage 2: runtime
 # Image finale allégée : pas d'outils de build, utilisateur non-root.
 # =============================================================================
 FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
@@ -72,7 +74,7 @@ COPY --chown=valorisa:valorisa . .
 
 EXPOSE 8181
 
-USER valorisa
+USER ${VALORISA_UID}
 
 # TODO : remplacer "app:app" par le vrai chemin module:callable de
 # l'application WSGI (ex. "myproject.wsgi:app"). "socat.example:app" dans le
