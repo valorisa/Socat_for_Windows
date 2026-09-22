@@ -78,7 +78,7 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
    relying on it:
 
    - **It only covers the Cygwin side.** `/usr/local/bin` is added to the `PATH` *inside* Cygwin, not to the native Windows `PATH`. Running
-     `socat` from `cmd.exe` or PowerShell still requires **Step 4** (copy the
+     `socat` from `cmd.exe` or PowerShell still requires *Step 4* (copy the
      binary to a Windows-accessible folder and add it to the system
      `PATH`) — or, alternatively, adding `C:\cygwin64\usr\local\bin`
      itself to the Windows `PATH`.
