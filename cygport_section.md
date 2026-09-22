@@ -35,8 +35,8 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
 2. Clone this repository:
 
    ```console
-   git clone https://github.com/valorisa/socat_1.8.1.0-for-Windows.git
-   cd socat_1.8.1.0-for-Windows
+   git clone https://github.com/valorisa/socat_1.8.1.3-for-Windows.git
+   cd socat_1.8.1.3-for-Windows
    ```
 
 3. Build the package:
@@ -75,7 +75,7 @@ For more information on Socat usage, refer to the official documentation.
 
 ```bash
 NAME="socat"
-VERSION="1.8.1.0"
+VERSION="1.8.1.3"
 CATEGORY="net"
 SRC_URI="<http://www.dest-unreach.org/socat/download/${NAME}-${VERSION}.tar.gz>"
 HOMEPAGE="<http://www.dest-unreach.org/socat/>"
