@@ -77,24 +77,20 @@ Socat (SOcket CAT) is a multipurpose relay tool for bidirectional data transfer 
    manually copying the binary around. Two things worth knowing before
    relying on it:
 
-   - **It only covers the Cygwin side.** `/usr/local/bin` is added to the
-
-     `PATH` *inside* Cygwin, not to the native Windows `PATH`. Running
-     `socat` from `cmd.exe` or PowerShell still requires Step 4 (copy the
+   - **It only covers the Cygwin side.** `/usr/local/bin` is added to the `PATH` *inside* Cygwin, not to the native Windows `PATH`. Running
+     `socat` from `cmd.exe` or PowerShell still requires **Step 4** (copy the
      binary to a Windows-accessible folder and add it to the system
      `PATH`) — or, alternatively, adding `C:\cygwin64\usr\local\bin`
      itself to the Windows `PATH`.
 
    - **`cygwin1.dll` is required either way.** This build is linked
-
-     against Cygwin's POSIX layer, so `socat.exe` needs `cygwin1.dll`
+against Cygwin's POSIX layer, so `socat.exe` needs `cygwin1.dll`
      (found in `C:\cygwin64\bin`) reachable — either next to `socat.exe`
      or on the `PATH` — to run outside a Cygwin terminal. `make install`
      does not copy this DLL for you.
 
    - You can also target a Windows-visible path directly, e.g.
-
-     `make install prefix=/cygdrive/c/socat`, to skip the manual copy in
+`make install prefix=/cygdrive/c/socat`, to skip the manual copy in
      Step 4 altogether.
 
    If `/usr/local` isn't writable by your user, run this from an elevated
