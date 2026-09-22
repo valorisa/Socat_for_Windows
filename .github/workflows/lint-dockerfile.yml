@@ -1,0 +1,29 @@
+name: Lint Dockerfile
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .hadolint.yaml
+      - .github/workflows/lint-dockerfile.yml
+  pull_request:
+    paths:
+      - Dockerfile
+      - .hadolint.yaml
+      - .github/workflows/lint-dockerfile.yml
+
+permissions:
+  contents: read
+
+jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run hadolint
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: Dockerfile
